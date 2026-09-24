@@ -39,8 +39,9 @@ def Session():
 
 class TestFormatFromMimetype(object):
     """_format_from_mimetype maps known mimetypes to the short format name
-    tabulator expects. The important case is the xlsx mimetype, which the old
-    split-on-'/' behaviour mangled into an unopenable format."""
+    tabulator expects. The important case is the xlsx mimetype, whose part
+    after '/' isn't the file extension, so the old split-on-'/' fallback
+    produced a format tabulator couldn't open."""
 
     def test_xlsx_mimetype_maps_to_xlsx(self):
         mimetype = (

@@ -289,12 +289,18 @@ def split_copy_by_size(input_file, engine, logger, resource_id, headers, delimit
         cleanup_temp_file(infile)
 
 
-# Map the common tabular mimetypes to the short format name tabulator expects.
-# Used only as a fallback when the file extension didn't yield a readable
-# format. Splitting a mimetype on '/' (the previous behaviour) turns
-# 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' into
-# 'vnd.openxmlformats-...sheet', which tabulator can't open - and then reports
-# the misleading "doesn't have a sheet 1" error instead of the real cause.
+# Explicit map of the tabular mimetypes we support to the short format name
+# tabulator expects. Used only as a fallback when the file extension didn't
+# yield a readable format.
+#
+# The previous fallback took the part of the mimetype after '/', but that part
+# isn't always the file extension: for example
+# 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' gives
+# 'vnd.openxmlformats-...sheet' rather than 'xlsx', which tabulator can't open
+# and then reports the misleading "doesn't have a sheet 1" instead of the real
+# cause. Listing every supported mimetype (even ones like 'text/csv' where the
+# suffix already happens to be the extension) keeps this a single, explicit
+# source of truth and independent of whatever the suffix fallback produces.
 MIMETYPE_FORMATS = {
     'text/csv': 'csv',
     'application/csv': 'csv',
@@ -308,8 +314,10 @@ MIMETYPE_FORMATS = {
 def _format_from_mimetype(mimetype):
     """Best-effort short format name (csv/xls/xlsx/...) from a mimetype.
 
-    Falls back to the substring after the last '/', matching the historical
-    behaviour, only when the mimetype isn't one we recognise.
+    Looks the mimetype up in ``MIMETYPE_FORMATS`` first. Only for an unknown
+    mimetype does it fall back to the substring after the last '/' (the
+    historical behaviour), which is correct when that suffix happens to be the
+    file extension but not otherwise.
     """
     if not mimetype:
         return None
